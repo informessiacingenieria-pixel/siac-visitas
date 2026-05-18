@@ -10,7 +10,7 @@ export default function NuevaVisita() {
   const [repuestos, setRepuestos] = useState([{ descripcion: '', cantidad: 1 }])
 
   const [form, setForm] = useState({
-    numero_visita: Date.now().toString().slice(-6),
+    numero_visita: '',
     fecha: new Date().toISOString().split('T')[0],
     centro_id: '',
     tecnico_id: '',
