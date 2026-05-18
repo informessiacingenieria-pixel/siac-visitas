@@ -6,6 +6,7 @@ export default function Visitas() {
   const [visitas, setVisitas] = useState([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState('todos')
+  const [mesSeleccionado, setMesSeleccionado] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => { fetchVisitas() }, [])
@@ -25,7 +26,23 @@ export default function Visitas() {
     fetchVisitas()
   }
 
+  // Obtener meses únicos de las visitas
+  const mesesDisponibles = [...new Set(visitas.map(v => {
+    const d = new Date(v.fecha)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  }))].sort((a, b) => b.localeCompare(a))
+
+  const nombreMes = (mesStr) => {
+    const [year, month] = mesStr.split('-')
+    const fecha = new Date(year, month - 1)
+    return fecha.toLocaleDateString('es-CL', { month: 'long', year: 'numeric' })
+  }
+
   const visitasFiltradas = visitas.filter(v => {
+    const d = new Date(v.fecha)
+    const mesVisita = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const pasaMes = mesSeleccionado ? mesVisita === mesSeleccionado : true
+    if (!pasaMes) return false
     if (filtro === 'con_repuestos') return v.repuestos_visita.length > 0
     if (filtro === 'pendiente') return v.estado_cobro === 'pendiente' && v.repuestos_visita.length > 0
     if (filtro === 'cobrado') return v.estado_cobro === 'cobrado'
@@ -33,10 +50,14 @@ export default function Visitas() {
   })
 
   const filtros = [
-    { key: 'todos', label: 'Todas', count: visitas.length },
-    { key: 'con_repuestos', label: 'Con repuestos', count: visitas.filter(v => v.repuestos_visita.length > 0).length },
-    { key: 'pendiente', label: 'Pendientes', count: visitas.filter(v => v.estado_cobro === 'pendiente' && v.repuestos_visita.length > 0).length },
-    { key: 'cobrado', label: 'Cobradas', count: visitas.filter(v => v.estado_cobro === 'cobrado').length },
+    { key: 'todos', label: 'Todas', count: visitas.filter(v => {
+      if (!mesSeleccionado) return true
+      const d = new Date(v.fecha)
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` === mesSeleccionado
+    }).length },
+    { key: 'con_repuestos', label: 'Con repuestos', count: visitasFiltradas.filter(v => v.repuestos_visita.length > 0).length },
+    { key: 'pendiente', label: 'Pendientes', count: visitasFiltradas.filter(v => v.estado_cobro === 'pendiente' && v.repuestos_visita.length > 0).length },
+    { key: 'cobrado', label: 'Cobradas', count: visitasFiltradas.filter(v => v.estado_cobro === 'cobrado').length },
   ]
 
   const estadoBadge = (estado, tieneRepuestos) => {
@@ -57,7 +78,7 @@ export default function Visitas() {
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Visitas</h1>
-          <p className="text-gray-400 text-sm mt-1">{visitas.length} visitas registradas</p>
+          <p className="text-gray-400 text-sm mt-1">{visitasFiltradas.length} visitas encontradas</p>
         </div>
         <button
           onClick={() => navigate('/visitas/nueva')}
@@ -66,7 +87,27 @@ export default function Visitas() {
         </button>
       </div>
 
-      {/* Filtros */}
+      {/* Filtro por mes */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4 flex items-center gap-3">
+        <span className="text-sm font-medium text-gray-500">📅 Mes:</span>
+        <select
+          value={mesSeleccionado}
+          onChange={e => setMesSeleccionado(e.target.value)}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+          <option value="">Todos los meses</option>
+          {mesesDisponibles.map(mes => (
+            <option key={mes} value={mes}>{nombreMes(mes)}</option>
+          ))}
+        </select>
+        {mesSeleccionado && (
+          <button onClick={() => setMesSeleccionado('')}
+            className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
+            × Limpiar
+          </button>
+        )}
+      </div>
+
+      {/* Filtros estado */}
       <div className="flex gap-2 mb-5 flex-wrap">
         {filtros.map(f => (
           <button key={f.key} onClick={() => setFiltro(f.key)}
