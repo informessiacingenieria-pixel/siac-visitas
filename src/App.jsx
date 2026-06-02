@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { supabase } from './supabaseClient'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Visitas from './pages/Visitas'
@@ -10,17 +9,13 @@ import Layout from './components/Layout'
 import DetalleVisita from './pages/DetalleVisita'
 
 export default function App() {
-  const [session, setSession] = useState(null)
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setLoading(false)
-    })
-    supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-    })
+    const stored = localStorage.getItem('siac_user')
+    if (stored) setUser(JSON.parse(stored))
+    setLoading(false)
   }, [])
 
   if (loading) return (
@@ -31,8 +26,8 @@ export default function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={!session ? <Login /> : <Navigate to="/" />} />
-      <Route path="/" element={session ? <Layout /> : <Navigate to="/login" />}>
+      <Route path="/login" element={!user ? <Login setUser={setUser} /> : <Navigate to="/" />} />
+      <Route path="/" element={user ? <Layout setUser={setUser} /> : <Navigate to="/login" />}>
         <Route index element={<Dashboard />} />
         <Route path="visitas" element={<Visitas />} />
         <Route path="visitas/nueva" element={<NuevaVisita />} />

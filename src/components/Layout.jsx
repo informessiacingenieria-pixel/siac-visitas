@@ -1,11 +1,11 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { supabase } from '../supabaseClient'
 
-export default function Layout() {
+export default function Layout({ setUser }) {
   const navigate = useNavigate()
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
+  const handleLogout = () => {
+    localStorage.removeItem('siac_user')
+    setUser(null)
     navigate('/login')
   }
 
@@ -33,7 +33,6 @@ export default function Layout() {
               src="/logo-siac.png"
               alt="SIAC Ingeniería"
               className="h-14 w-auto"
-              style={{ filter: 'drop-shadow(0px 2px 6px rgba(0,0,0,0.2))'}}
             />
           </div>
         </div>
