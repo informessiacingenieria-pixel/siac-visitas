@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 
 const USUARIOS = [
   { email: 'informessiacingenieria@gmail.com', password: 'Siac2026!' },
+  { email: 'mpoloni@siac-ingenieria.cl', password: 'MauroSiac2026!' },
 ]
 
 export default function Login({ setUser }) {
